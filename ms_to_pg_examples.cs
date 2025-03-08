@@ -1,4 +1,4 @@
-// NpgsqlConnection Example
+// NpgsqlConnection 
 
 Npgsql.NpgsqlConnection cnNorthwind =
   new Npgsql.NpgsqlConnection();
@@ -17,8 +17,7 @@ cnNorthwind.ConnectionString =
 
 
 
-// OleDbConnection Example
-
+// OleDbConnection 
 
 System.Data.OleDb.OleDbConnection cnNorthwind = new 
   System.Data.OleDb.OleDbConnection();
@@ -107,8 +106,6 @@ private void cnNorthwind_StateChange(
 
 // Example of try-catch Block 
 
-
-
 Npgsql.NpgsqlConnection cnNorthwind;
 
 try
@@ -147,7 +144,6 @@ finally
 
 
 // Handling SQL Exceptions 
-
 
 // Write the code to execute inside a try block
 
@@ -216,7 +212,6 @@ finally // run this code in every case
 
 // Creating Connection Pooling
 
-
 // Connection 1
 
 NpgsqlConnection myConnection = new NpgsqlConnection();
@@ -255,7 +250,6 @@ myConnection.ConnectionString = "User ID=sa;" +
 
 
 // Controlling Connection Pooling
-
 
 // To disable connection pooling
 
@@ -296,9 +290,6 @@ cnNorthwind.ConnectionString = "User ID=sa;" +
 
 
 //   Code for Specifying Command Parameters
-
-
-
 
 /* Stored procedure with an input parameter named @CatID,
    an output parameter named @CatName, and a return value */
@@ -378,9 +369,8 @@ public class Example
 
 
 
+
 // Code for Creating Parameters for a Command Object
-
-
 
 NpgsqlParameter p1, p2, p3; 
 
@@ -396,7 +386,6 @@ p3.Direction = ParameterDirection.Output;
 cmdCountProductsInCategory.Parameters.Add(p1);
 cmdCountProductsInCategory.Parameters.Add(p2);
 cmdCountProductsInCategory.Parameters.Add(p3);
-
 
 
 // Правильный код с комментариями для PostgreSQL
@@ -464,8 +453,8 @@ using (var connection = new NpgsqlConnection("Host=localhost;Port=5432;Username=
 
 
 
-// Code for Executing a Command That Returns a Single Value
 
+// Code for Executing a Command That Returns a Single Value
 
 string sql= "SELECT UnitsInStock FROM Products " +
                     "WHERE ProductID = @ProdID";
@@ -508,7 +497,7 @@ cnNorthwind.Close();
 MessageBox.Show("Quantity in stock: " + qty.ToString());
 
 
-// Пример использование 
+// Пример использования
 
 string connectionString = "Host=localhost;Port=5432;Username=sa;Password=me2I81sour2;Database=Northwind;";
 
@@ -538,7 +527,6 @@ using (var cnNorthwind = new NpgsqlConnection(connectionString))
 // Code for Retrieving Output and Return Values
 
 
-
 /* Stored procedure with an input parameter named @CatID,
    an output parameter named @CatName, and a return value */
 
@@ -558,7 +546,6 @@ AS
   GROUP BY Categories.CategoryName
 	
   RETURN @ProdCount
-
 
 
 // Set input parameters, execute the stored procedure, then 
@@ -696,10 +683,6 @@ using (var cnNorthwind = new NpgsqlConnection("Host=localhost;Port=5432;Username
 
 
 
-
-
-
-
 // Code For Using a DataReader Object to Process a Multiple Result Sets
 
 
@@ -768,6 +751,7 @@ using (var cnNorthwind = new NpgsqlConnection("Host=localhost;Port=5432;Username
         MessageBox.Show("Products affected: " + rdrProducts.RecordsAffected);
     }
 }
+
 
 // более реальный пример
 
@@ -838,7 +822,6 @@ using (var cnNorthwind = new NpgsqlConnection("Host=localhost;Port=5432;Username
 }
 
 // проще через несколько отдельных запросов
-
 
 
 
@@ -925,7 +908,6 @@ using (var cnNorthwind = new NpgsqlConnection("Host=localhost;Port=5432;Username
 
 
 
- 
 
 
 // Code for Executing a Data Manipulation Language Command
@@ -975,7 +957,6 @@ using (var cnNorthwind = new NpgsqlConnection("Host=localhost;Port=5432;Username
 
 
  
-
 
 
 
@@ -1056,6 +1037,370 @@ using (var cnNorthwind = new NpgsqlConnection("Host=localhost;Port=5432;Username
 
 
 
+// How to Create a Foreign Key Constraint
+
+dtCustomers = dsNorthwind.Tables["Customers"];
+dtOrders = dsNorthwind.Tables["Orders"];
+
+ForeignKeyConstraint fkcCustomersOrders = 
+  new ForeignKeyConstraint("FK_CustomersOrders",
+  dtCustomers.Columns["CustomerID"], 
+  dtOrders.Columns["CustomerID"]);
+
+fkcCustomersOrders.DeleteRule = Rule.None;
+
+dtOrders.Constraints.Add(fkcCustomersOrders);
+
+
+// C#-код, если нужно установить связь ForeignKeyConstraint в DataSet
+
+using System;
+using System.Data;
+
+DataSet dsNorthwind = new DataSet();
+
+// Создаём таблицы Customers и Orders
+
+DataTable dtCustomers = new DataTable("Customers");
+dtCustomers.Columns.Add("CustomerID", typeof(int));
+dtCustomers.PrimaryKey = new DataColumn[] { dtCustomers.Columns["CustomerID"] };
+
+DataTable dtOrders = new DataTable("Orders");
+dtOrders.Columns.Add("OrderID", typeof(int));
+dtOrders.Columns.Add("CustomerID", typeof(int));
+
+dsNorthwind.Tables.Add(dtCustomers);
+dsNorthwind.Tables.Add(dtOrders);
+
+// Создаём ограничение внешнего ключа
+
+ForeignKeyConstraint fkcCustomersOrders = new ForeignKeyConstraint(
+    "FK_CustomersOrders",
+    dtCustomers.Columns["CustomerID"],
+    dtOrders.Columns["CustomerID"]
+);
+
+fkcCustomersOrders.DeleteRule = Rule.None; // при удалении родительской записи зависимые записи не будут удалены и выбросится исключение 
+dtOrders.Constraints.Add(fkcCustomersOrders);
+
+// Вывод информации о связи
+Console.WriteLine("Foreign Key Constraint added: " + fkcCustomersOrders.ConstraintName);
+
+
+
+
+
+
+
+
+
+
+// How to Position on a Record 
+
+private CurrencyManager cmCustomers;
+
+private void Form1_Load(object sender, System.EventArgs e) 
+{
+	txtCompanyName.DataBindings.Add( 
+		"Text", dtCustomers, "CompanyName");
+	cmCustomers = (CurrencyManager)(this.BindingContext[dtCustomers]);
+	cmCustomers.Position = 0;
+}
+
+private void btnMoveNext(object sender, System.EventArgs e)
+{	if (cmCustomers.Position != cmCustomers.Count - 1)
+		{
+			cmCustomers.Position += 1;
+		}
+}
+
+private void btnMoveFirst(object sender, System.EventArgs e)
+{
+   cmCustomers.Position = 0;
+}
+
+private void btnMovePrevious(object sender, System.EventArgs e)
+{   if (cmCustomers.Position !=0) 
+      {
+        cmCustomers.Position -= 1;
+      }	
+}
+
+private void btnMoveLast(object sender, System.EventArgs e)
+{
+   cmCustomers.Position = cmCustomers.Count - 1;
+}
+
+
+// управление записями с CurrencyManager в приложении Windows Forms 
+
+using System;
+using System.Data;
+using System.Windows.Forms;
+
+public partial class Form1 : Form
+{
+    private CurrencyManager cmCustomers;
+    private DataTable dtCustomers;
+
+    public Form1()
+    {
+        InitializeComponent();
+        LoadData();
+    }
+
+    private void LoadData()
+    {
+        // Создаём DataTable
+        dtCustomers = new DataTable();
+        dtCustomers.Columns.Add("CustomerID", typeof(int));
+        dtCustomers.Columns.Add("CompanyName", typeof(string));
+
+        // Добавляем тестовые данные
+        dtCustomers.Rows.Add(1, "Company A");
+        dtCustomers.Rows.Add(2, "Company B");
+        dtCustomers.Rows.Add(3, "Company C");
+
+        // Привязка данных к TextBox
+        txtCompanyName.DataBindings.Add("Text", dtCustomers, "CompanyName");
+
+        // Устанавливаем CurrencyManager
+        cmCustomers = (CurrencyManager)BindingContext[dtCustomers];
+        cmCustomers.Position = 0;
+    }
+
+    private void btnMoveNext_Click(object sender, EventArgs e)
+    {
+        if (cmCustomers.Position < cmCustomers.Count - 1)
+        {
+            cmCustomers.Position += 1;
+        }
+    }
+
+    private void btnMoveFirst_Click(object sender, EventArgs e)
+    {
+        cmCustomers.Position = 0;
+    }
+
+    private void btnMovePrevious_Click(object sender, EventArgs e)
+    {
+        if (cmCustomers.Position > 0)
+        {
+            cmCustomers.Position -= 1;
+        }
+    }
+
+    private void btnMoveLast_Click(object sender, EventArgs e)
+    {
+        cmCustomers.Position = cmCustomers.Count - 1;
+    }
+}
+
+
+
+
+
+
+
+
+
+// Two-Level XSD Schema
+
+
+<?xml version="1.0" standalone="yes"?>
+<xsd:schema id="PersonPet" targetNamespace="" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+  <xsd:element name="PersonPet" msdata:IsDataSet="true">
+    <xsd:complexType>
+      <xsd:choice maxOccurs="unbounded">
+        <xsd:element name="Person">
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element name="ID" msdata:AutoIncrement="true" type="xsd:int" />
+              <xsd:element name="Name" type="xsd:string" minOccurs="0" />
+              <xsd:element name="Age" type="xsd:int" minOccurs="0" />
+            </xsd:sequence>
+          </xsd:complexType>
+        </xsd:element>
+        <xsd:element name="Pet">
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element name="ID" msdata:AutoIncrement="true" type="xsd:int" />
+              <xsd:element name="OwnerID" type="xsd:int" minOccurs="0" />
+              <xsd:element name="Name" type="xsd:string" minOccurs="0" />
+              <xsd:element name="Type" type="xsd:string" minOccurs="0" />
+            </xsd:sequence>
+          </xsd:complexType>
+        </xsd:element>
+      </xsd:choice>
+    </xsd:complexType>
+    <xsd:unique name="Constraint1" msdata:PrimaryKey="true">
+      <xsd:selector xpath=".//Person" />
+      <xsd:field xpath="ID" />
+    </xsd:unique>
+    <xsd:unique name="Pet_Constraint1" msdata:ConstraintName="Constraint1" msdata:PrimaryKey="true">
+      <xsd:selector xpath=".//Pet" />
+      <xsd:field xpath="ID" />
+    </xsd:unique>
+  </xsd:element>
+  <xsd:annotation>
+    <xsd:appinfo>
+      <msdata:Relationship name="PersonPet" msdata:parent="Person" msdata:child="Pet" msdata:parentkey="ID" msdata:childkey="OwnerID" />
+    </xsd:appinfo>
+  </xsd:annotation>
+</xsd:schema>
+
+
+// XML Data Document based on Schema (Code)
+
+
+<PersonPet xmlns = "http://tempuri/PersonPet.xsd">
+  <Person>
+    <ID>0</ID>
+    <Name>Mark</Name>
+    <Age>18</Age>
+  </Person>
+  <Person>
+    <ID>1</ID>
+    <Name>William</Name>
+    <Age>12</Age>
+  </Person>
+  <Person>
+    <ID>2</ID>
+    <Name>James</Name>
+    <Age>7</Age>
+  </Person>
+  <Person>
+    <ID>3</ID>
+    <Name>Levi</Name>
+    <Age>4</Age>
+  </Person>
+  <Pet>
+    <ID>0</ID>
+    <OwnerID>0</OwnerID>
+    <Name>Frank</Name>
+    <Type>cat</Type>
+  </Pet>
+  <Pet>
+    <ID>1</ID>
+    <OwnerID>1</OwnerID>
+    <Name>Rex</Name>
+    <Type>dog</Type>
+  </Pet>
+  <Pet>
+    <ID>2</ID>
+    <OwnerID>2</OwnerID>
+    <Name>Cottontail</Name>
+    <Type>rabbit</Type>
+  </Pet>
+  <Pet>
+    <ID>3</ID>
+    <OwnerID>3</OwnerID>
+    <Name>Sid</Name>
+    <Type>snake</Type>
+  </Pet>
+  <Pet>
+    <ID>4</ID>
+    <OwnerID>3</OwnerID>
+    <Name>Tickles</Name>
+    <Type>spider</Type>
+  </Pet>
+  <Pet>
+    <ID>5</ID>
+    <OwnerID>1</OwnerID>
+    <Name>Tweetie</Name>
+    <Type>canary</Type>
+  </Pet>
+</PersonPet>
+
+
+// Использование схемы XSD и DataSet в .NET
+
+// Загрузка XSD-схемы
+DataSet ds = new DataSet();
+ds.ReadXmlSchema("PersonPet.xsd");
+
+// Загрузка XML-данных
+ds.ReadXml("PersonPet.xml");
+
+// Вывод данных с защитой от NullReferenceException
+
+if (ds.Tables.Contains("Person"))
+{
+    foreach (DataRow row in ds.Tables["Person"].Rows)
+    {
+        Console.WriteLine($"Человек: {row["Name"]}, Возраст: {row["Age"]}");
+    }
+}
+else
+{
+    Console.WriteLine("Ошибка: Таблица Person не найдена.");
+}
+
+if (ds.Tables.Contains("Pet"))
+{
+    foreach (DataRow row in ds.Tables["Pet"].Rows)
+    {
+        string ownerID = row.IsNull("OwnerID") ? "нет владельца" : row["OwnerID"].ToString();
+
+        Console.WriteLine($"Питомец: {row["Name"]}, Тип: {row["Type"]}, Владелец ID: {ownerID}");
+    }
+}
+else
+{
+    Console.WriteLine("Ошибка: Таблица Pet не найдена.");
+}
+
+
+
+
+
+
+
+
+// XSD schema that defines the parts of a relational table named “Orders”
+
+// XSD-схема отражает реляционную структуру данных
+
+<!-- The element name followed by a complexType defines the “Orders” table -->
+
+<xsd:element name="Orders" minOccurs="0" maxOccurs="unbounded">
+   
+   <xsd:complexType>
+      <xsd:sequence>
+         
+         <xsd:element name="OrderID" type="xsd:int"/>
+         <!--This next block defines the OrderDetails table -->
+         
+         <xsd:element name="OrderDetails" minOccurs="0" maxOccurs="unbounded">
+            <xsd:complexType>
+               <xsd:sequence>
+                  <xsd:element name="ProductID" type="xsd:int"/>
+                  <xsd:element name="UnitPrice" type="xsd:number"/>
+                  <xsd:element name="Quantity"  type="xsd:short"/>
+               </xsd:sequence>
+            </xsd:complexType>
+         </xsd:element>
+
+         <xsd:element name="OrderDate" type="xsd:dateTime" minOccurs="0"/>
+      </xsd:sequence>
+      
+      <xsd:attribute name="CustomerID" type="xsd:string" use="prohibited" />
+   </xsd:complexType>
+
+    <!-- Each OrderID is unique -->
+    <xsd:unique name="Orders_Constraint">       
+       <xsd:selector xpath=".//Orders" />
+       <xsd:field xpath="OrderID" />
+    </xsd:unique>
+    
+    <!-- Primary key -->
+    <xsd:key name="OrderDetails_Constraint">    
+       <xsd:selector xpath=".//OrderDetails" />
+       <xsd:field xpath="OrderID" />
+       <xsd:field xpath="ProductID" />
+    </xsd:key>
+
+</xsd:element>
 
 
 
@@ -1067,6 +1412,145 @@ using (var cnNorthwind = new NpgsqlConnection("Host=localhost;Port=5432;Username
 
 
 
+// Loading an XSD Schema from a File into a Dataset
+
+
+private const string PurchaseSchema = 
+                                @"C:\sampledata\Purchase.xsd";
+private DataSet myDS; 
+
+private void Load_XSD()
+{
+	try
+	{	
+		myDS = new DataSet();
+
+		Console.WriteLine ("Reading the Schema file");
+		myDS.ReadXmlSchema(PurchaseSchema);
+	}
+	catch(Exception e)
+	{	
+		Console.WriteLine("Exception: " + e.ToString());
+	}
+}
+
+
+// Код подготовленый к работе с файлами XSD (если некорректные типы данных XSD)
+
+using System;
+using System.Data;
+using System.IO;
+
+private const string PurchaseSchema = @"C:\sampledata\Purchase.xsd";
+private DataSet myDS;
+
+private void Load_XSD()
+{
+    try
+    {
+        if (!File.Exists(PurchaseSchema))
+        {
+            Console.WriteLine("Ошибка: Файл XSD не найден.");
+            return;
+        }
+
+        myDS = new DataSet();
+
+        Console.WriteLine("Читаем XSD-схему: " + PurchaseSchema);
+        myDS.ReadXmlSchema(PurchaseSchema);
+        Console.WriteLine("Схема загружена успешно.");
+    }
+    catch (Exception e)
+    {
+        Console.WriteLine("Ошибка загрузки XSD: " + e.Message);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+// Loading an XSD into a DataSet by Using a Stream Object 
+
+private const string PurchaseSchema =  
+                                @"C:\sampledata\Purchase.xsd";
+private DataSet myDS;
+
+private void Load_XSD()
+{
+	StreamReader myStreamReader = null; 
+
+	try
+	{
+		myStreamReader = new StreamReader(PurchaseSchema);
+
+		myDS = new DataSet();
+
+		Console.WriteLine ("Reading the Schema file");
+		myDS.ReadXmlSchema(myStreamReader);
+	}
+	catch (Exception e)
+	{	
+		Console.WriteLine("Exception: " + e.ToString());
+	}
+	finally
+	{	
+		if (myStreamReader!=null)
+			myStreamReader.Close();
+	
+	}
+}
+
+
+// код безопасно загружает XSD-схему из потока (из памяти, сети или ресурса)
+
+using System;
+using System.Data;
+using System.IO;
+
+string schemaContent = @"
+<?xml version='1.0' encoding='utf-8'?> 
+<xsdschema>
+<!-- XSD -->
+</xsd:schema>
+";
+string filePath = @"C:\sampledata\Purchase.xsd";
+
+//пример только для открытия потока (StreamReader)
+Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+File.WriteAllText(filePath, schemaContent);
+
+private const string PurchaseSchema = @"C:\sampledata\Purchase.xsd"; 
+private DataSet myDS;
+
+private void Load_XSD()
+{
+    if (!File.Exists(PurchaseSchema))
+    {
+        Console.WriteLine("Ошибка: Файл XSD не найден.");
+        return;
+    }
+
+    try
+    {
+        using (StreamReader myStreamReader = new StreamReader(PurchaseSchema))
+        {
+            myDS = new DataSet();
+            Console.WriteLine("Читаем XSD-схему из потока");
+            myDS.ReadXmlSchema(myStreamReader);
+            Console.WriteLine("Схема загружена успешно.");
+        }
+    }
+    catch (Exception e)
+    {
+        Console.WriteLine("Ошибка загрузки XSD: " + e.Message);
+    }
+}
 
 
 
@@ -1078,16 +1562,62 @@ using (var cnNorthwind = new NpgsqlConnection("Host=localhost;Port=5432;Username
 
 
 
+// Printing out the Structure of a DataSet named myDS 
+
+private void DisplayTableStructure()
+{
+  Console.WriteLine("Table structure");
+
+  //Print the number of tables 
+  Console.WriteLine("Tables count=" + myDS.Tables.Count.ToString());
+
+  //Print the table and column names
+
+  for (int i = 0; i < myDS.Tables.Count; i++)
+    {
+	//Print the table names
+	Console.WriteLine("TableName='" + myDS.Tables[i].TableName + "'.");
+	Console.WriteLine("Columns count=" + myDS.Tables[i].Columns.Count.ToString());
+
+  	for (int j = 0; j < myDS.Tables[i].Columns.Count; j++)
+	{      
+		//Print the column names and data types    
+		Console.WriteLine( "\t" +
+		        " ColumnName='" + myDS.Tables[i].Columns[j].ColumnName +
+		        " DataType='"   + myDS.Tables[i].Columns[j].DataType.ToString() );
+    	}
+    	Console.WriteLine()
+   }
+}
 
 
+// код выводит структуру DataSet в консоль
 
+private void DisplayTableStructure()
+{
+    if (myDS == null || myDS.Tables.Count == 0)
+    {
+        Console.WriteLine("DataSet пуст или не загружен.");
+        return;
+    }
 
+    Console.WriteLine("Table structure");
 
+    // Вывод количества таблиц
+    Console.WriteLine($"Tables count={myDS.Tables.Count}");
 
+    foreach (DataTable table in myDS.Tables)
+    {
+        Console.WriteLine($"TableName='{table.TableName}', Columns count={table.Columns.Count}");
 
+        foreach (DataColumn column in table.Columns)
+        {
+            Console.WriteLine($"\tColumnName='{column.ColumnName}', DataType='{column.DataType}'");
+        }
 
-
-
+        Console.WriteLine();
+    }
+}
 
 
 
