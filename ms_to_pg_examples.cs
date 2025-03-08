@@ -1628,3 +1628,551 @@ private void DisplayTableStructure()
 
 
 
+// Loading a Schema and Data into a New DataSet 
+
+private const string PurchaseSchema = 
+                                @"C:\sampledata\Purchase.xsd";
+
+private void ReadXmlDataOnly()
+{
+	try
+	{
+		myDS = new DataSet();
+		Console.WriteLine("Reading the Schema file");
+		myDS.ReadXmlSchema(PurchaseSchema); 
+		
+		Console.WriteLine("Loading the XML data file");
+		myDS.ReadXml(@"C:\sampledata\PurchaseData.xml",  
+                  XmlReadMode.IgnoreSchema);  
+
+		dataGrid1.DataSource = myDS.Tables[1];  
+	}
+
+	catch(Exception e)
+	{
+		Console.WriteLine("Exception: " + e.ToString());
+	}
+}
+
+// код загружает XSD-схему и XML-данные в DataSet и привязывает таблицу данных к элементу управления dataGrid1
+
+using System;
+using System.Data;
+using System.IO;
+using System.Windows.Forms;
+
+private const string PurchaseSchema = @"C:\sampledata\Purchase.xsd";
+private const string PurchaseData = @"C:\sampledata\PurchaseData.xml";
+private DataSet myDS;
+
+private void ReadXmlDataOnly()
+{
+    try
+    {
+        if (!File.Exists(PurchaseSchema) || !File.Exists(PurchaseData))
+        {
+            Console.WriteLine("Ошибка: XSD или XML файл не найден.");
+            return;
+        }
+
+        myDS = new DataSet();
+
+        Console.WriteLine("Читаем XSD-схему...");
+        myDS.ReadXmlSchema(PurchaseSchema);
+
+        Console.WriteLine("Загружаем XML-данные...");
+        myDS.ReadXml(PurchaseData, XmlReadMode.IgnoreSchema);
+
+        Console.WriteLine($"Загружено таблиц: {myDS.Tables.Count}");
+        foreach (DataTable table in myDS.Tables)
+        {
+            Console.WriteLine($"Таблица '{table.TableName}' содержит {table.Rows.Count} записей.");
+        }
+
+        if (myDS.Tables.Count > 0)
+        {
+            dataGrid1.DataSource = myDS.Tables[0]; // Привязываем первую таблицу
+        }
+        else
+        {
+            Console.WriteLine("Ошибка: В DataSet нет загруженных таблиц.");
+        }
+    }
+    catch (Exception e)
+    {
+        Console.WriteLine("Ошибка загрузки данных: " + e.Message);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// Reading Inline Schema and XML Data 
+
+
+private void ReadXmlDataAndSchema()
+{
+	try
+	{
+		myDS = new DataSet();
+
+		myDS.ReadXml(@"C:\sampledata\PurchaseOrder.xml", 
+                   XmlReadMode.ReadSchema);
+	}
+
+	catch (Exception e)
+	{
+		Console.WriteLine("Exception: " + e.ToString());
+	}
+	
+}
+
+
+// код загружает XSD-схему и XML-данные одновременно
+
+using System;
+using System.Data;
+using System.IO;
+
+private void ReadXmlDataAndSchema()
+{
+    string xmlFile = @"C:\sampledata\PurchaseOrder.xml";
+
+    try
+    {
+        if (!File.Exists(xmlFile))
+        {
+            Console.WriteLine("Ошибка: XML файл не найден.");
+            return;
+        }
+
+        myDS = new DataSet();
+
+        Console.WriteLine("Читаем XML-файл со встроенной схемой...");
+        myDS.ReadXml(xmlFile, XmlReadMode.ReadSchema);
+
+        if (myDS.Tables.Count == 0)
+        {
+            Console.WriteLine("Ошибка: XML не содержит встроенной схемы.");
+            return;
+        }
+
+        Console.WriteLine($"Загружено таблиц: {myDS.Tables.Count}");
+        foreach (DataTable table in myDS.Tables)
+        {
+            Console.WriteLine($"Таблица: {table.TableName}, Количество записей: {table.Rows.Count}");
+        }
+    }
+    catch (Exception e)
+    {
+        Console.WriteLine("Ошибка загрузки XML: " + e.Message);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+// Inferring a Schema from XML Data 
+
+
+private void ReadXmlDataInferSchema()
+{
+	try
+	{
+		myDS = new DataSet();
+
+		myDS.ReadXml(@"C:\sampledata\PurchaseOrder.xml", 
+                   XmlReadMode.InferSchema);
+
+	catch (Exception e)
+	{
+		Console.WriteLine("Exception: " + e.ToString());
+	}
+}
+
+
+// код загружает XML-данные в DataSet, автоматически определяя схему на основе первых вхождений данных
+
+using System;
+using System.Data;
+using System.IO;
+
+private void ReadXmlDataInferSchema()
+{
+    string xmlFile = @"C:\sampledata\PurchaseOrder.xml";
+
+    try
+    {
+        if (!File.Exists(xmlFile))
+        {
+            Console.WriteLine("Ошибка: XML файл не найден.");
+            return;
+        }
+
+        myDS = new DataSet();
+
+        Console.WriteLine("Читаем XML-файл с автоматическим определением схемы...");
+        myDS.ReadXml(xmlFile, XmlReadMode.InferSchema);
+
+        if (myDS.Tables.Count == 0)
+        {
+            Console.WriteLine("Ошибка: XML не содержит данных, схема не определена.");
+            return;
+        }
+
+        Console.WriteLine($"Загружено таблиц: {myDS.Tables.Count}");
+        foreach (DataTable table in myDS.Tables)
+        {
+            Console.WriteLine($"Таблица: {table.TableName}, Количество записей: {table.Rows.Count}");
+        }
+    }
+    catch (Exception e)
+    {
+        Console.WriteLine("Ошибка загрузки XML: " + e.Message);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+// Loading a DataSet by Using WriteXMLSchema and Data from an XML File
+
+
+private void SaveXSDSchema()
+{
+	try
+	{
+		myDS = new DataSet();
+
+		//Load an inline schema and data from an XML file
+		myDS.ReadXml(@"C:\sampledata\PurchaseOrder.xml", 
+			XmlReadMode.ReadSchema);
+
+		//Save the schema to an XSD file
+		myDS.WriteXmlSchema(@"C:\sampledata\POSchema.xsd");
+	}
+
+	catch (Exception e)
+	{
+		Console.WriteLine("Exception: "+ e.ToString());
+	}
+}
+
+
+// код загружает XML-данные и встроенную схему в DataSet и затем сохраняет XSD-схему в файл
+
+using System;
+using System.Data;
+using System.IO;
+
+private void SaveXSDSchema()
+{
+    string xmlFile = @"C:\sampledata\PurchaseOrder.xml";
+    string schemaFile = @"C:\sampledata\POSchema.xsd";
+
+    try
+    {
+        if (!File.Exists(xmlFile))
+        {
+            Console.WriteLine("Ошибка: XML-файл не найден.");
+            return;
+        }
+
+        myDS = new DataSet();
+
+        Console.WriteLine("Читаем XML-файл со встроенной схемой...");
+        myDS.ReadXml(xmlFile, XmlReadMode.ReadSchema);
+
+        if (myDS.Tables.Count == 0)
+        {
+            Console.WriteLine("Ошибка: XML не содержит схемы, XSD не сохранён.");
+            return;
+        }
+
+        Directory.CreateDirectory(Path.GetDirectoryName(schemaFile));
+
+        Console.WriteLine($"Сохраняем XSD-схему в {schemaFile}");
+        myDS.WriteXmlSchema(schemaFile);
+        Console.WriteLine("Схема успешно сохранена.");
+
+        Console.WriteLine($"Загружено таблиц: {myDS.Tables.Count}");
+        foreach (DataTable table in myDS.Tables)
+        {
+            Console.WriteLine($"Таблица: {table.TableName}, Количество записей: {table.Rows.Count}");
+        }
+    }
+    catch (Exception e)
+    {
+        Console.WriteLine("Ошибка: " + e.Message);
+    }
+}
+
+
+
+
+
+
+
+
+
+// Using the GetXmlSchema Method of the DataSet object
+
+
+private void XSDSchemaToString()
+{
+	try
+	{
+		string StrPurchaseSchema;
+		myDS = new DataSet();
+
+		//Load an inline schema and data from an XML file
+		myDS.ReadXml(@"C:\sampledata\PurchaseOrder.xml", 
+			XmlReadMode.ReadSchema);
+
+		//Get the schema from the DataSet and load it 
+		//into a string
+		StrPurchaseSchema = myDS.GetXmlSchema();
+
+	catch (Exception e)
+	{
+		Console.WriteLine("Exception: " + e.ToString());
+	}
+}
+
+
+// код загружает XML-данные со встроенной XSD-схемой в DataSet и извлекает XSD-схему 
+
+using System;
+using System.Data;
+using System.IO;
+
+private void XSDSchemaToString()
+{
+    string xmlFile = @"C:\sampledata\PurchaseOrder.xml";
+
+    try
+    {
+        if (!File.Exists(xmlFile))
+        {
+            Console.WriteLine("Ошибка: XML-файл не найден.");
+            return;
+        }
+
+        myDS = new DataSet();
+
+        Console.WriteLine("Читаем XML-файл со встроенной схемой...");
+        myDS.ReadXml(xmlFile, XmlReadMode.ReadSchema);
+
+        if (myDS.Tables.Count == 0)
+        {
+            Console.WriteLine("Ошибка: XML не содержит схемы.");
+            return;
+        }
+
+        string StrPurchaseSchema = myDS.GetXmlSchema();
+
+        Console.WriteLine("Извлечённая XSD-схема:");
+        Console.WriteLine(StrPurchaseSchema);
+    }
+    catch (Exception e)
+    {
+        Console.WriteLine("Ошибка: " + e.Message);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+// Writing XML Data to a File 
+
+
+private void SaveXMLDataOnly()
+{
+	try
+	{
+		string StrPurchaseSchema;
+		myDS = new DataSet();
+
+		//Load an inline schema and data from an XML file
+		myDS.ReadXml(@"C:\sampledata\PurchaseOrder.xml", 
+			XmlReadMode.ReadSchema);
+		
+		//Save the data portion of the DataSet to a file 
+		myDS.WriteXml(@"C:\sampledata\CurrentOrders.xml", 
+			XmlWriteMode.IgnoreSchema);
+	}
+	
+	catch (Exception e)
+	{
+		Console.WriteLine("Exception: " + e.ToString());
+	}
+}
+
+
+// код загружает XML-данные со встроенной XSD-схемой в DataSet и сохраняет только данные в XML-файл
+
+using System;
+using System.Data;
+using System.IO;
+
+private void SaveXMLDataOnly()
+{
+    string inputFile = @"C:\sampledata\PurchaseOrder.xml";
+    string outputFile = @"C:\sampledata\CurrentOrders.xml";
+
+    try
+    {
+        if (!File.Exists(inputFile))
+        {
+            Console.WriteLine("Ошибка: XML-файл не найден.");
+            return;
+        }
+
+        myDS = new DataSet();
+
+        Console.WriteLine("Читаем XML-файл со встроенной схемой...");
+        myDS.ReadXml(inputFile, XmlReadMode.ReadSchema);
+
+        if (myDS.Tables.Count == 0 || myDS.Tables[0].Rows.Count == 0)
+        {
+            Console.WriteLine("Ошибка: XML не содержит данных, файл не сохранён.");
+            return;
+        }
+
+        Directory.CreateDirectory(Path.GetDirectoryName(outputFile));
+
+        Console.WriteLine($"Сохраняем XML-данные в {outputFile}");
+        myDS.WriteXml(outputFile, XmlWriteMode.IgnoreSchema);
+        Console.WriteLine("Данные успешно сохранены.");
+    }
+    catch (Exception e)
+    {
+        Console.WriteLine("Ошибка: " + e.Message);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+// Example of a DiffGram
+
+
+<diffgr:diffgram 
+	xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" 
+	xmlns:diffgr="urn:schemas-microsoft-com:xml-diffgram-v1">
+
+  <CustomerDataSet>
+    <Customers diffgr:id="Customers1"msdata:rowOrder="0" 
+               diffgr:hasChanges="modified">
+      <CustomerID>ALFKI</CustomerID>
+      <CompanyName>New Company</CompanyName>
+    </Customers>
+    <Customers diffgr:id="Customers2" msdata:rowOrder="1">
+      <CustomerID>ANATR</CustomerID>
+      <CompanyName>Ana Trujillo Emparedados y helados</CompanyName>
+    </Customers>
+  </CustomerDataSet>
+
+  <diffgr:before>
+    <Customers diffgr:id="Customers1" msdata:rowOrder="0">
+      <CustomerID>ALFKI</CustomerID>
+      <CompanyName>Alfreds Futterkiste</CompanyName>
+    </Customers>
+  </diffgr:before>
+</diffgr:diffgram>
+
+
+
+
+
+
+
+
+
+
+// Creating a DiffGram
+
+
+private void SaveDataSetChanges()
+{
+	try
+	{
+		string StrPurchaseSchema;
+		myDS = new DataSet();
+
+		//Load an inline schema and data from an XML file
+		myDS.ReadXml(@"C:\sampledata\Customers.xml", 
+			XmlReadMode.ReadSchema);
+
+		//Make a change to information in the DataSet
+		//Delete a row
+		myDS.Tables[0].Rows[0].Remove();
+
+		//Save the data portion of the DataSet as a Diffgram 
+		myDS.WriteXml(@"C:\sampledata\CustomerChanges.xml", 
+			XmlWriteMode.DiffGram);
+	}
+
+	catch (Exception e)
+	{
+		Console.WriteLine("Exception: " + e.ToString());
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
