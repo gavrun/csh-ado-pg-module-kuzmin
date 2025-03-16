@@ -2160,11 +2160,752 @@ private void SaveDataSetChanges()
 
 
 
+//Creating a Data Adapter Programmatically
+
+
+NpgsqlDataAdapter daProducts = new NpgsqlDataAdapter();
+
+NpgsqlConnection cnNorthwind = new NpgsqlConnection(
+  "Host=localhost;Database=Northwind;" +
+  "Username=user;Password=password;");
+
+NpgsqlCommand cmSelect = new NpgsqlCommand(
+  "SELECT * FROM Products", cnNorthwind);
+
+daProducts.SelectCommand = cmSelect;
+
+
+// добавил DataTable и явное перечисление столбцов
+
+private void LoadData()
+{
+    try
+    {
+        string connectionString = "Host=localhost;Port=5432;Database=Northwind;Username=user;Password=password;";
+        
+        using (var cnNorthwind = new NpgsqlConnection(connectionString))
+
+        using (var cmSelect = new NpgsqlCommand("SELECT \"ProductID\", \"ProductName\", \"UnitPrice\" FROM \"Products\"", cnNorthwind))
+
+        using (var daProducts = new NpgsqlDataAdapter(cmSelect))
+        {
+            DataTable dtProducts = new DataTable();
+            daProducts.Fill(dtProducts);
+
+            Console.WriteLine("Загружено строк: " + dtProducts.Rows.Count);
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine("Ошибка загрузки данных: " + ex.Message);
+    }
+}
 
 
 
 
 
+
+
+
+
+
+// Creating a DataAdapter that Uses Existing Stored Procedures
+
+
+NpgsqlDataAdapter daProdCat = new NpgsqlDataAdapter();
+
+NpgsqlCommand cmSelect = new NpgsqlCommand();
+cmSelect.Connection = cnNorthwind;
+cmSelect.CommandText = "GetProductsAndCategories";
+cmSelect.CommandType = CommandType.StoredProcedure;
+
+daProdCat.SelectCommand = cmSelect;
+
+
+
+
+
+
+
+
+
+
+
+// Filling a DataSet by Using a DataAdapter
+
+
+DataSet dsCustomers = new DataSet();
+dsCustomers.Tables.Add(new DataTable("Customers"));
+
+dsCustomers.Tables[0].BeginLoadData();
+daCustomers.Fill(dsCustomers, "Customers");
+dsCustomers.Tables[0].EndLoadData();
+
+dataGrid1.DataSource = dsCustomers.Tables[0].DefaultView;
+
+
+// Fill() создаёт таблицу автоматически + пробросили в DataDrid
+
+private void LoadCustomers()
+{
+    string connectionString = "Host=localhost;Port=5432;Database=Northwind;Username=user;Password=password;";
+    
+    try
+    {
+        using (var cnNorthwind = new NpgsqlConnection(connectionString))
+
+        using (var daCustomers = new NpgsqlDataAdapter("SELECT * FROM \"Customers\"", cnNorthwind))
+        {
+            DataSet dsCustomers = new DataSet();
+
+            Console.WriteLine("Загружаем данные...");
+            dsCustomers.BeginInit();
+
+            daCustomers.Fill(dsCustomers, "Customers");
+
+            dsCustomers.EndInit();
+
+            if (dsCustomers.Tables.Count == 0 || dsCustomers.Tables["Customers"].Rows.Count == 0)
+            {
+                Console.WriteLine("Ошибка: Данные не загружены.");
+                return;
+            }
+
+            dataGrid1.DataSource = dsCustomers.Tables["Customers"].DefaultView;
+
+            Console.WriteLine($"Загружено строк: {dsCustomers.Tables["Customers"].Rows.Count}");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine("Ошибка загрузки данных: " + ex.Message);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+// How to Infer Additional Constraints for a DataSet
+
+
+//Using MissingSchemaAction
+DataSet dsCustomers = new DataSet();
+daCustomers.MissingSchemaAction =
+                           MissingSchemaAction.AddWithKey;
+daCustomers.Fill(dsCustomers);
+dataGrid1.DataSource = dsCustomers.Tables[0].DefaultView;
+
+// Using FillSchema
+DataSet dsCustomers = new DataSet();
+daCustomers.FillSchema(dsCustomers, SchemaType.Mapped);
+daCustomers.Fill(dsCustomers);
+dataGrid1.DataSource = dsCustomers.Tables[0].DefaultView;
+
+
+// два способа автоматического создания ограничений
+
+// MissingSchemaAction
+
+DataSet dsCustomers = new DataSet();
+daCustomers.MissingSchemaAction = MissingSchemaAction.AddWithKey;
+daCustomers.Fill(dsCustomers);
+dataGrid1.DataSource = dsCustomers.Tables[0].DefaultView;
+
+// FillSchema заполняет схему таблицы, типы данных, ключи
+
+DataSet dsCustomers = new DataSet();
+daCustomers.FillSchema(dsCustomers, SchemaType.Mapped);
+daCustomers.Fill(dsCustomers);
+dataGrid1.DataSource = dsCustomers.Tables[0].DefaultView;
+
+
+
+
+
+
+
+
+// Defining a DataSet Schema Programmatically
+
+
+// Create the DataTable and DataColumns
+DataTable table = new DataTable("Customers");
+DataColumn c1 = new DataColumn("CustomerID",  typeof(String));
+DataColumn c2 = new DataColumn("CompanyName", typeof(String));
+DataColumn c3 = new DataColumn("ContactName", typeof(String));
+
+// Add DataColumns and Constraints to the DataTable
+table.Columns.Add(c1);
+table.Columns.Add(c2);
+table.Columns.Add(c3);
+table.Constraints.Add("PK_CustomerID", c1, true);
+
+// Create the DataSet, and add the DataTable to it
+DataSet dsCustomers = new DataSet();
+dsCustomers.Tables.Add(table);
+
+// Fill DataSet by using a DataAdapter, and bind to a DataGrid
+dsCustomers.Tables[0].BeginLoadData();
+daCustomers.Fill(dsCustomers, "Customers");
+dsCustomers.Tables[0].EndLoadData();
+dataGrid1.DataSource = dsCustomers.Tables[0].DefaultView;
+
+
+// оптимизированный пример сокращённый способ создания DataTable
+
+private void LoadCustomers()
+{
+    string connectionString = "Host=localhost;Port=5432;Database=Northwind;Username=user;Password=password;";
+
+    try
+    {
+        using (var cnNorthwind = new NpgsqlConnection(connectionString))
+        using (var daCustomers = new NpgsqlDataAdapter("SELECT * FROM \"Customers\"", cnNorthwind))
+        {
+            DataSet dsCustomers = new DataSet();
+
+            // Создаём DataTable с колонками и ограничением Primary Key
+            DataTable table = new DataTable("Customers")
+            {
+                Columns =
+                {
+                    new DataColumn("CustomerID", typeof(String)),
+                    new DataColumn("CompanyName", typeof(String)),
+                    new DataColumn("ContactName", typeof(String))
+                }
+            };
+
+            table.Constraints.Add("PK_CustomerID", table.Columns["CustomerID"], true);
+            dsCustomers.Tables.Add(table);
+
+            Console.WriteLine("Загружаем данные...");
+            dsCustomers.Tables["Customers"].BeginLoadData();
+
+            daCustomers.Fill(dsCustomers, "Customers");
+
+            dsCustomers.Tables["Customers"].EndLoadData();
+
+            if (dsCustomers.Tables["Customers"].Rows.Count == 0)
+            {
+                Console.WriteLine("Ошибка: Данные не загружены.");
+                return;
+            }
+
+            dataGrid1.DataSource = dsCustomers.Tables["Customers"].DefaultView;
+            Console.WriteLine($"Загружено строк: {dsCustomers.Tables["Customers"].Rows.Count}");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine("Ошибка загрузки данных: " + ex.Message);
+    }
+}
+
+
+
+
+
+
+
+
+// Using Current and Original Data in a Row 
+
+
+foreach (DataRow row in this.dsCustomers.Customers.Rows)
+{
+  String msg = "";
+  if (row.RowState == DataRowState.Added || 
+      row.RowState == DataRowState.Unchanged)
+  { 
+    msg = "Current data:\n" +
+      row["CompanyName", DataRowVersion.Current] + ", " +
+      row["ContactName", DataRowVersion.Current];
+  }
+  else if (row.RowState == DataRowState.Deleted)
+  {
+    msg = "Original data:\n" +
+      row["CompanyName", DataRowVersion.Original] + ", " +
+      row["ContactName", DataRowVersion.Original];
+  }
+  else if (row.RowState == DataRowState.Modified)
+  {
+    msg = "Original data:\n" +
+      row["CompanyName", DataRowVersion.Original] + ", " +
+      row["ContactName", DataRowVersion.Original] + "\n";
+
+    msg = msg + "Current data:\n" +
+      row["CompanyName", DataRowVersion.Current] + ", " +
+      row["ContactName", DataRowVersion.Current];
+  }
+  MessageBox.Show(msg, "RowState: " + row.RowState);
+}
+
+
+// как работать с текущими и оригинальными значениями в DataRow
+
+// проверка RowStateException
+
+private void ShowRowStates()
+{
+    foreach (DataRow row in this.dsCustomers.Customers.Rows)
+    {
+        string msg = "";
+
+        if (row.RowState == DataRowState.Added || row.RowState == DataRowState.Unchanged)
+        {
+            msg = "Current data:\n" +
+                  row["CompanyName", DataRowVersion.Current] + ", " +
+                  (row.IsNull("ContactName") ? "NULL" : row["ContactName", DataRowVersion.Current].ToString());
+        }
+        else if (row.RowState == DataRowState.Deleted)
+        {
+            if (row.HasVersion(DataRowVersion.Original))
+            {
+                msg = "Original data:\n" +
+                      row["CompanyName", DataRowVersion.Original] + ", " +
+                      (row.IsNull("ContactName") ? "NULL" : row["ContactName", DataRowVersion.Original].ToString());
+            }
+            else
+            {
+                msg = "Ошибка: Удалённая строка не содержит оригинальных данных.";
+            }
+        }
+        else if (row.RowState == DataRowState.Modified)
+        {
+            msg = "Original data:\n" +
+                  row["CompanyName", DataRowVersion.Original] + ", " +
+                  (row.IsNull("ContactName") ? "NULL" : row["ContactName", DataRowVersion.Original].ToString()) + "\n";
+
+            msg += "Current data:\n" +
+                   row["CompanyName", DataRowVersion.Current] + ", " +
+                   (row.IsNull("ContactName") ? "NULL" : row["ContactName", DataRowVersion.Current].ToString());
+        }
+
+        MessageBox.Show(msg, "RowState: " + row.RowState);
+    }
+}
+
+
+
+
+
+
+
+
+// Data Modification Commands
+
+
+// Using the InsertCommand property
+NpgsqlCommand cmInsert = new NpgsqlCommand(
+    "INSERT INTO Customers VALUES (@ID, @Name)",
+    cnNorthwind);
+cmInsert.Parameters.Add(new SqlParameter("@ID",
+    SqlDbType.NChar, 5, ParameterDirection.Input, false, 
+    0, 0, "CustomerID", DataRowVersion.Current, null));
+cmInsert.Parameters.Add(new SqlParameter("@Name",
+    SqlDbType.NVarChar, 40, ParameterDirection.Input, false,
+    0, 0, "CompanyName", DataRowVersion.Current, null));
+daCustomers.InsertCommand = cmInsert;
+
+// Using the UpdateCommand property
+NpgsqlCommand cmUpdate = new NpgsqlCommand(
+    "UPDATE Customers SET CustomerID = @ID, " +
+    "CompanyName = @Name WHERE (CustomerID = @OrigID)",
+    cnNorthwind);
+cmUpdate.Parameters.Add(new SqlParameter("@ID",
+    SqlDbType.NChar, 5, ParameterDirection.Input, false,
+    0, 0, "CustomerID", DataRowVersion.Current, null));
+cmUpdate.Parameters.Add(new SqlParameter("@Name",
+    SqlDbType.NVarChar, 40, ParameterDirection.Input, false,
+    0, 0, "CompanyName", DataRowVersion.Current, null));
+cmUpdate.Parameters.Add(new SqlParameter("@OrigID",
+    SqlDbType.NChar, 5, ParameterDirection.Input, false,
+    0, 0, "CustomerID", DataRowVersion.Original, null));
+daCustomers.UpdateCommand = cmUpdate;
+
+// Using the DeleteCommand
+NpgsqlCommand cmDelete = new NpgsqlCommand(
+    "DELETE FROM Customers WHERE (CustomerID = @ID)",
+    cnNorthwind);
+cmDelete.Parameters.Add(new SqlParameter("@ID",
+    SqlDbType.NChar, 5, ParameterDirection.Input, false, 
+    0, 0, "CustomerID", DataRowVersion.Original, null));
+daCustomers.DeleteCommand = cmDelete;
+
+
+// программно устанавливает команды InsertCommand, UpdateCommand, DeleteCommand для NpgsqlDataAdapter
+
+// InsertCommand
+NpgsqlCommand cmInsert = new NpgsqlCommand(
+    "INSERT INTO \"Customers\" (\"CustomerID\", \"CompanyName\") VALUES (@ID, @Name)", cnNorthwind);
+cmInsert.Parameters.Add(new NpgsqlParameter("@ID",
+    NpgsqlTypes.NpgsqlDbType.Char) { SourceColumn = "CustomerID" });
+cmInsert.Parameters.Add(new NpgsqlParameter("@Name",
+    NpgsqlTypes.NpgsqlDbType.Varchar) { SourceColumn = "CompanyName" });
+daCustomers.InsertCommand = cmInsert;
+
+// UpdateCommand
+NpgsqlCommand cmUpdate = new NpgsqlCommand(
+    "UPDATE \"Customers\" SET \"CompanyName\" = @Name WHERE \"CustomerID\" = @OrigID", cnNorthwind);
+cmUpdate.Parameters.Add(new NpgsqlParameter("@Name",
+    NpgsqlTypes.NpgsqlDbType.Varchar) { SourceColumn = "CompanyName" });
+cmUpdate.Parameters.Add(new NpgsqlParameter("@OrigID",
+    NpgsqlTypes.NpgsqlDbType.Char) { SourceColumn = "CustomerID", SourceVersion = DataRowVersion.Original });
+daCustomers.UpdateCommand = cmUpdate;
+
+// DeleteCommand
+NpgsqlCommand cmDelete = new NpgsqlCommand(
+    "DELETE FROM \"Customers\" WHERE \"CustomerID\" = @ID", cnNorthwind);
+cmDelete.Parameters.Add(new NpgsqlParameter("@ID",
+    NpgsqlTypes.NpgsqlDbType.Char) { SourceColumn = "CustomerID", SourceVersion = DataRowVersion.Original });
+daCustomers.DeleteCommand = cmDelete;
+
+
+
+
+
+
+
+
+
+// Updating a Data Source
+
+
+// Fill the Customers and Orders tables initially
+daCustomers.Fill(dsCustomerOrders.Customers);
+daOrders.Fill(dsCustomerOrders.Orders);
+dataGrid1.DataSource = dsCustomerOrders.Customers.DefaultView;
+
+// Update the data source with any changes
+DataTable deletedOrders = 
+  dsCustomerOrders.Orders.GetChanges(DataRowState.Deleted);
+daOrders.Update(deletedOrders);
+
+DataTable deletedCustomers = 
+  dsCustomerOrders.Customers.GetChanges(DataRowState.Deleted);
+daCustomers.Update(deletedCustomers);
+
+
+// обновляет источник данных DataSet после внесения изменений DataTable
+
+// проверка NullReferenceException
+
+using System;
+using System.Data;
+using Npgsql;
+
+private void UpdateDatabase()
+{
+    try
+    {
+        // Заполняем DataSet данными
+        daCustomers.Fill(dsCustomerOrders.Customers);
+        daOrders.Fill(dsCustomerOrders.Orders);
+        dataGrid1.DataSource = dsCustomerOrders.Customers.DefaultView;
+
+        // Удаление данных 1
+        DataTable deletedOrders = dsCustomerOrders.Orders.GetChanges(DataRowState.Deleted);
+        if (deletedOrders != null)
+        {
+            daOrders.Update(deletedOrders);
+            deletedOrders.AcceptChanges();
+        }
+
+        // Удаление данных 2
+        DataTable deletedCustomers = dsCustomerOrders.Customers.GetChanges(DataRowState.Deleted);
+        if (deletedCustomers != null)
+        {
+            daCustomers.Update(deletedCustomers);
+            deletedCustomers.AcceptChanges();
+        }
+
+        // Обновляем изменённые и новые записи
+        daOrders.Update(dsCustomerOrders.Orders);
+        daCustomers.Update(dsCustomerOrders.Customers);
+
+        Console.WriteLine("Обновление базы данных завершено.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine("Ошибка при обновлении данных: " + ex.Message);
+    }
+}
+
+
+
+
+
+
+
+
+// Merging DataSets
+
+
+// Code, at the client
+
+// Get changes made by the user to the dsCustomers DataSet
+DataSet dsChanges = dsCustomers.GetChanges();
+			
+// Send changes to a Web Service, get latest data back again
+MyWebService service = new MyWebService();
+DataSet dsLatest = service.MyUpdateMethod(dsChanges);
+			
+// Merge latest data back into the dsCustomers DataSet
+dsCustomers.Merge(dsLatest);
+
+// Mark all rows as "unchanged" in the dsCustomers DataSet
+dsCustomers.AcceptChanges();
+
+
+// изменения, сделанные на клиенте, отправляются на сервер/веб-сервис, и объединение DataSet
+
+private void SyncWithServer()
+{
+    try
+    {
+        // Получаем изменения
+        DataSet dsChanges = dsCustomers.GetChanges();
+
+        if (dsChanges == null || dsChanges.Tables.Count == 0)
+        {
+            Console.WriteLine("Нет изменений для отправки.");
+            return;
+        }
+
+        // Отправляем изменения в веб-сервис
+        MyWebService service = new MyWebService();
+        DataSet dsLatest = service.MyUpdateMethod(dsChanges);
+
+        if (dsLatest != null)
+        {
+            // Объединяем обновлённые данные с клиентским DataSet
+            dsCustomers.Merge(dsLatest);
+        }
+
+        // Фиксируем изменения (если не планируем повторное обновление)
+        dsCustomers.AcceptChanges();
+
+        Console.WriteLine("Синхронизация завершена.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine("Ошибка при синхронизации: " + ex.Message);
+    }
+}
+
+
+
+
+
+
+
+
+// How the Data Adapter Configuration Wizard Supports Optimistic Concurrency
+
+
+this.cmUpdate.CommandText = 
+   "UPDATE Customers " +
+   "SET CustomerID=@CustomerID, CompanyName=@CompanyName " +
+   "   WHERE (CustomerID  = @Original_CustomerID) " +
+   "   AND   (CompanyName = @Original_CompanyName); " +
+   "SELECT CustomerID, CompanyName FROM Customers " +
+   "   WHERE (CustomerID = @Select_CustomerID)";
+
+this.cmUpdate.Parameters.Add(new SqlParameter(
+  "@CustomerID",
+   SqlDbType.NChar, 5, ParameterDirection.Input, false, 
+   0, 0, "CustomerID", DataRowVersion.Current, null));
+
+this.cmUpdate.Parameters.Add(new SqlParameter(
+  "@CompanyName", 
+   SqlDbType.NVarChar, 40, ParameterDirection.Input, false, 
+   0, 0, "CompanyName", DataRowVersion.Current, null));
+
+this.cmUpdate.Parameters.Add(new SqlParameter(
+  "@Original_CustomerID",
+   SqlDbType.NChar, 5, ParameterDirection.Input, false,
+   0, 0 , "CustomerID", DataRowVersion.Original, null));
+
+this.cmUpdate.Parameters.Add(new SqlParameter(
+  "@Original_CompanyName", 
+   SqlDbType.NVarChar, 40, ParameterDirection.Input, false, 
+   0, 0, "CompanyName", DataRowVersion.Original, null));
+
+this.cmUpdate.Parameters.Add(new SqlParameter(
+  "@Select_CustomerID", 
+   SqlDbType.NChar, 5, ParameterDirection.Input, false, 
+   0, 0, "CustomerID", DataRowVersion.Current, null));
+
+
+// @CustomerID Primary Key обычно не меняют, используя оптимистичную конкуренцию
+
+// SourceVersion = DataRowVersion.Original для проверки изменений
+
+private void ConfigureUpdateCommand(NpgsqlCommand cmUpdate)
+{
+    cmUpdate.CommandText = @"
+        UPDATE ""Customers"" 
+        SET ""CompanyName"" = @CompanyName
+        WHERE (""CustomerID"" = @Original_CustomerID) 
+          AND (""CompanyName"" = @Original_CompanyName);
+        SELECT ""CustomerID"", ""CompanyName"" FROM ""Customers"" 
+        WHERE (""CustomerID"" = @Select_CustomerID);";
+
+    cmUpdate.Parameters.Add(new NpgsqlParameter(
+        "@CustomerID", NpgsqlTypes.NpgsqlDbType.Char, 5) { SourceColumn = "CustomerID" });
+
+    cmUpdate.Parameters.Add(new NpgsqlParameter(
+        "@CompanyName", NpgsqlTypes.NpgsqlDbType.Varchar, 40) { SourceColumn = "CompanyName" });
+
+    cmUpdate.Parameters.Add(new NpgsqlParameter(
+        "@Original_CustomerID", NpgsqlTypes.NpgsqlDbType.Char, 5) { 
+        SourceColumn = "CustomerID", SourceVersion = DataRowVersion.Original });
+
+    cmUpdate.Parameters.Add(new NpgsqlParameter(
+        "@Original_CompanyName", NpgsqlTypes.NpgsqlDbType.Varchar, 40) { 
+        SourceColumn = "CompanyName", SourceVersion = DataRowVersion.Original });
+
+    cmUpdate.Parameters.Add(new NpgsqlParameter(
+        "@Select_CustomerID", NpgsqlTypes.NpgsqlDbType.Char, 5) { 
+        SourceColumn = "CustomerID", SourceVersion = DataRowVersion.Current });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Resolving Conflicts in a Disconnected Environment
+
+
+try 
+{
+  daCustomers.Update(dsCustomers);
+}
+catch(System.Exception ex) 
+{
+  if(dsCustomers.HasErrors)
+  {
+    foreach(DataTable table in dsCustomers.Tables)
+    {
+      if(table.HasErrors)
+      {
+        foreach(DataRow row in table.Rows)
+        {
+          if(row.HasErrors)
+          {
+            MessageBox.Show("Row: " + row["CustomerID"],
+                             row.RowError);
+
+            foreach(DataColumn col in row.GetColumnsInError())
+            {
+              MessageBox.Show(col.ColumnName, 
+                              "Error in this column");
+            }
+            row.ClearErrors();
+            row.RejectChanges();
+          }
+        }
+      }
+    }
+  }
+} 
+
+// разрешение конфликтов в отключённом режиме при обновлении DataSet
+
+// повтроная попытка Update() из Enterprise-практики, если возможны конфликты данных
+
+private void UpdateDatabase()
+{
+    int maxRetries = 3; // Максимальное число попыток
+    int retryDelay = 1000; // Пауза перед повторной попыткой (мс)
+
+    for (int attempt = 1; attempt <= maxRetries; attempt++)
+    {
+        try
+        {
+            daCustomers.Update(dsCustomers);
+            Console.WriteLine("Обновление выполнено успешно.");
+            break; // Выход из цикла при успешном обновлении
+        }
+        catch (DBConcurrencyException ex) // Конфликт при обновлении (Optimistic Concurrency)
+        {
+            Console.WriteLine($"Попытка {attempt}: Конфликт при обновлении - {ex.Message}");
+
+            // Отображаем конфликтующие строки
+            foreach (DataTable table in dsCustomers.Tables)
+            {
+                if (table.HasErrors)
+                {
+                    foreach (DataRow row in table.Rows)
+                    {
+                        if (row.HasErrors)
+                        {
+                            Console.WriteLine($"Ошибка в строке {row["CustomerID"]}: {row.RowError}");
+
+                            foreach (DataColumn col in row.GetColumnsInError())
+                            {
+                                Console.WriteLine($"Ошибка в колонке: {col.ColumnName}");
+                            }
+
+                            // Очищаем ошибку, загружаем актуальные данные
+                            row.ClearErrors();
+                            row.RejectChanges(); // Откат изменений в этой строке
+                        }
+                    }
+                }
+            }
+
+            // Перезагружаем актуальные данные перед повторной попыткой
+            Console.WriteLine("Обновляем DataSet новыми данными...");
+            daCustomers.Fill(dsCustomers, "Customers");
+
+            // Пауза перед повторной попыткой
+            Thread.Sleep(retryDelay);
+        }
+        catch (NpgsqlException ex) // Ошибки PostgreSQL
+        {
+            Console.WriteLine($"Ошибка базы данных: {ex.Message}");
+
+            // Обрабатываем типичные ошибки
+            if (ex.SqlState == "40001") // Deadlock
+            {
+                Console.WriteLine("Обнаружен Deadlock. Повторная попытка...");
+                Thread.Sleep(retryDelay);
+                continue; // Повторяем попытку
+            }
+            else if (ex.SqlState == "23505") // Нарушение уникальности (Duplicate Key)
+            {
+                Console.WriteLine("Ошибка: Дублирующийся ключ. Отмена обновления.");
+                break; // Прерываем обновление
+            }
+            else
+            {
+                Console.WriteLine("Критическая ошибка. Прерываем обновление.");
+                break;
+            }
+        }
+        catch (Exception ex) // Все остальные ошибки
+        {
+            Console.WriteLine($"Неизвестная ошибка: {ex.Message}");
+            break; // Не пытаемся повторять
+        }
+    }
+}
 
 
 
